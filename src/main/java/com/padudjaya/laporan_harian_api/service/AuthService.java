@@ -1,10 +1,10 @@
+// File: AuthService.java (KODE LENGKAP & SUDAH DIPERBAIKI)
 package com.padudjaya.laporan_harian_api.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.padudjaya.laporan_harian_api.dto.AuthResponse;
 import com.padudjaya.laporan_harian_api.dto.LoginRequest;
@@ -20,51 +20,45 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService; // Tambahkan ini
-    private final AuthenticationManager authenticationManager; // Tambahkan ini
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    @Transactional
-    public void register(RegisterRequest registerRequest) {
-        // 1. Cek apakah username sudah ada
-        userRepository.findByUsername(registerRequest.getUsername())
-            .ifPresent(user -> {
-                throw new IllegalStateException("Username sudah terdaftar!");
-            });
+    public void register(RegisterRequest request) {
+        // Cek apakah user sudah ada
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new IllegalStateException("Username sudah digunakan");
+        }
 
-        // 2. Buat user baru dan PASTIKAN password di-enkripsi
-        User newUser = User.builder()
-                .username(registerRequest.getUsername())
-                .password(passwordEncoder.encode(registerRequest.getPassword()))
-                .fullName(registerRequest.getFullName())
-                .role(registerRequest.getRole())
-                .build();
+        // Buat user baru. Logikanya jadi lebih simpel!
+        User user = User.builder()
+            .username(request.getUsername())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .fullName(request.getFullName())
+            .role(request.getRole()) // Langsung ambil role dari request
+            .build();
 
-        // 3. Simpan user baru ke database
-        userRepository.save(newUser);
+        userRepository.save(user);
     }
 
-    // --- METODE BARU UNTUK LOGIN ---
-    public AuthResponse login(LoginRequest loginRequest) {
-        // 1. Otentikasi pengguna
+    public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
-                loginRequest.getUsername(),
-                loginRequest.getPassword()
+                request.getUsername(),
+                request.getPassword()
             )
         );
 
-        // 2. Jika berhasil, cari user di database
-        var user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new IllegalStateException("User tidak ditemukan setelah otentikasi"));
-        
-        // 3. Buat JWT Token
-        var jwtToken = jwtService.generateToken(user);
-        
-        // 4. Kirim token sebagai respons
+        User user = userRepository.findByUsername(request.getUsername())
+            .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
+        String token = jwtService.generateToken(user);
+
         return AuthResponse.builder()
-                .token(jwtToken)
-                .username(user.getUsername())
-                .role(user.getRole())
-                .build();
+            .token(token)
+            .username(user.getUsername())
+            .fullName(user.getFullName())
+            .role(user.getRole().name()) // Konversi enum ke string untuk respons
+            .userId(user.getUserId().toString())
+            .build();
     }
 }

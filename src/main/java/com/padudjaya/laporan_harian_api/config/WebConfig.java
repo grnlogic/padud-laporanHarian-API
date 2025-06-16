@@ -9,9 +9,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**") // Hanya berlaku untuk path /api/
-                .allowedOrigins("http://localhost:3000") // Izinkan Next.js Anda
+        registry.addMapping("/api/**") // Semua endpoint API
+                .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000") // Spesifik origins
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+                
+        // Tambahkan mapping khusus untuk actuator
+        registry.addMapping("/actuator/**")
+                .allowedOrigins("http://localhost:3000", "http://127.0.0.1:3000")
+                .allowedMethods("GET", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
