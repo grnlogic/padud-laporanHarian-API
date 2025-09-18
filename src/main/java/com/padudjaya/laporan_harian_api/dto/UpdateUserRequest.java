@@ -9,4 +9,5 @@ import lombok.Data;
 public class UpdateUserRequest {
     private String fullName;
     private DivisiRole role;
+    private String password; // Tambahkan field ini untuk update password
 }

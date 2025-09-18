@@ -4,6 +4,7 @@ package com.padudjaya.laporan_harian_api.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
@@ -34,6 +36,11 @@ public class UserService {
 
         user.setFullName(request.getFullName());
         user.setRole(request.getRole());
+        
+        // Update password jika disediakan
+        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
 
         User updatedUser = userRepository.save(user);
         return mapToUserResponse(updatedUser);

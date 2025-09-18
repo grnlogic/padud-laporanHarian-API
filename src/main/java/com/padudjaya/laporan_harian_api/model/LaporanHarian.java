@@ -1,5 +1,7 @@
 // File: LaporanHarian.java
 package com.padudjaya.laporan_harian_api.model;
+import jakarta.persistence.FetchType;
+
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -39,6 +41,6 @@ public class LaporanHarian {
     private Instant createdAt = Instant.now();
 
     // Relasi: SATU Laporan memiliki BANYAK Rincian
-    @OneToMany(mappedBy = "laporan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RincianLaporan> rincianList;
+    @OneToMany(mappedBy = "laporan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER) // <-- TAMBAHKAN INI
+private List<RincianLaporan> rincianList;
 }
